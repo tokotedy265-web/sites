@@ -1,0 +1,73 @@
+<!-- /sites/pay/visa/index.html -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Paiement Visa</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="scripts.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>Carte Visa <span class="badge">International</span></h1>
+      <p class="sub">Utilise ta carte Visa pour payer ton abonnement. Les données carte ne sont JAMAIS stockées sur ce site.</p>
+
+      <form class="form" id="visa-form">
+        <div class="row">
+          <select id="plan">
+            <option value="week">Semaine (7 jours)</option>
+            <option value="month">Mois (30 jours)</option>
+          </select>
+          <input class="input" id="tgid" placeholder="Votre Telegram ID (tg_id)" />
+        </div>
+        <label class="price" id="price"></label>
+        <button class="button" type="submit">Payer avec Visa</button>
+        <div class="status" id="status"></div>
+        <div class="footer">Tu seras redirigé(e) vers la page sécurisée de ton PSP. Webhook Visa finalisera l’abonnement.</div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../../scripts.js"></script>
+  <script>
+    const planEl = document.getElementById("plan");
+    const priceEl = document.getElementById("price");
+    const form = document.getElementById("visa-form");
+    const statusEl = document.getElementById("status");
+
+    function updatePrice(){ priceEl.textContent = formatPrice(planEl.value); }
+    updatePrice();
+    planEl.addEventListener("change", updatePrice);
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const payload = buildPaymentPayload({
+        provider:"visa",
+        plan: planEl.value,
+        tg_id: document.getElementById("tgid").value || null
+      });
+
+      try{
+        setStatus(statusEl, "Création du paiement et génération de lien…");
+        const r = await createPayment(payload); 
+        // Le backend renverra provider_redirect (URL du PSP) si nécessaire
+        if (r.provider_redirect){
+          setStatus(statusEl, "Redirection vers le PSP…");
+          window.location.href = r.provider_redirect;
+        } else {
+          setStatus(statusEl, "Lien de paiement indisponible. Vérifie la config PSP.");
+        }
+      }catch(err){
+        setStatus(statusEl, "Erreur: " + err.message);
+      }
+    });
+  </script>
+    <input type="hidden" id="tgid" value="">
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const tg_id = urlParams.get("tg_id");
+  document.getElementById("tgid").value = tg_id;
+</script>
+</body>
+</html>

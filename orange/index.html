@@ -1,0 +1,70 @@
+<!-- /sites/pay/orange/index.html -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Paiement Orange Money</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="scripts.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>Orange Money <span class="badge">Local</span></h1>
+      <p class="sub">Saisis ton numéro Orange et choisis le plan. Tu valideras le paiement sur ton téléphone.</p>
+
+      <form class="form" id="orange-form">
+        <div class="row">
+          <select id="plan">
+            <option value="week">Semaine (7 jours)</option>
+            <option value="month">Mois (30 jours)</option>
+          </select>
+          <input class="input" id="tgid" placeholder="Votre Telegram ID (tg_id)" />
+        </div>
+        <input class="input" id="phone" placeholder="Numéro Orange (ex: 690000000)" required>
+        <label class="price" id="price"></label>
+        <button class="button" type="submit">Payer avec Orange Money</button>
+        <div class="status" id="status"></div>
+        <div class="footer">Le webhook Orange confirmera et prolongera ton abonnement.</div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../../scripts.js"></script>
+  <script>
+    const planEl = document.getElementById("plan");
+    const priceEl = document.getElementById("price");
+    const form = document.getElementById("orange-form");
+    const statusEl = document.getElementById("status");
+
+    function updatePrice(){ priceEl.textContent = formatPrice(planEl.value); }
+    updatePrice();
+    planEl.addEventListener("change", updatePrice);
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const payload = buildPaymentPayload({
+        provider:"orange",
+        plan: planEl.value,
+        tg_id: document.getElementById("tgid").value || null
+      });
+      payload.phone = document.getElementById("phone").value;
+
+      try{
+        setStatus(statusEl, "Création et initiation du paiement…");
+        const r = await createPayment(payload); // backend initie OM
+        sessionStorage.setItem("external_id", r.external_id);
+        setStatus(statusEl, "Demande envoyée ✅. Valide sur ton téléphone.");
+      }catch(err){
+        setStatus(statusEl, "Erreur: " + err.message);
+      }
+    });
+  </script>
+    <input type="hidden" id="tgid" value="">
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const tg_id = urlParams.get("tg_id");
+  document.getElementById("tgid").value = tg_id;
+</script>
+</body>
+</html>

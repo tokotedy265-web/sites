@@ -1,0 +1,81 @@
+<!-- /sites/pay/paypal/index.html -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Paiement PayPal</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="scripts.js"></script>
+  <!-- Remplace TON_CLIENT_ID -->
+  <script src="https://www.paypal.com/sdk/js?client-id=TON_CLIENT_ID&currency=USD"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>PayPal <span class="badge">Sécurisé</span></h1>
+      <p class="sub">Choisis ton plan et paie avec PayPal. Les bonus s’appliquent selon tes règles.</p>
+
+      <div class="form" id="paypal-form">
+        <div class="row">
+          <select id="plan">
+            <option value="week">Semaine (7 jours)</option>
+            <option value="month">Mois (30 jours)</option>
+          </select>
+          <input class="input" id="tgid" placeholder="Votre Telegram ID (tg_id)" />
+        </div>
+        <label class="price" id="price"></label>
+        <div id="paypal-button-container" style="margin-top:12px;"></div>
+        <div class="status" id="status"></div>
+        <div class="footer">Le paiement sera confirmé via webhook PayPal.</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../scripts.js"></script>
+  <script>
+    const priceEl = document.getElementById("price");
+    const planEl = document.getElementById("plan");
+    const statusEl = document.getElementById("status");
+    const tgidEl = document.getElementById("tgid");
+
+    function updatePrice(){ priceEl.textContent = formatPrice(planEl.value); }
+    updatePrice();
+    planEl.addEventListener("change", updatePrice);
+
+    // On crée la commande côté backend pour obtenir external_id
+    paypal.Buttons({
+      createOrder: async (data, actions) => {
+        try {
+          const payload = buildPaymentPayload({
+            provider: "paypal",
+            plan: planEl.value,
+            tg_id: tgidEl.value || null
+          });
+          setStatus(statusEl, "Création du paiement…");
+          const r = await createPayment(payload);
+          // stocker external_id dans session pour le webhook
+          sessionStorage.setItem("external_id", r.external_id);
+
+          return actions.order.create({
+            purchase_units: [{ amount: { value: planEl.value === "week" ? "1.00" : "4.00" } }] // Exemple USD de test
+          });
+        } catch (e){
+          setStatus(statusEl, "Erreur: " + e.message);
+        }
+      },
+      onApprove: async (data, actions) => {
+        const details = await actions.order.capture();
+        setStatus(statusEl, "Paiement capturé ✅ en attente du webhook…");
+        // Ton webhook PayPal appellera finalize_payment via webhooks.py (status=success)
+      },
+      onError: (err) => setStatus(statusEl, "Erreur PayPal: " + err.message)
+    }).render('#paypal-button-container');
+  </script>
+    <input type="hidden" id="tgid" value="">
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const tg_id = urlParams.get("tg_id");
+  document.getElementById("tgid").value = tg_id;
+</script>
+</body>
+</html>
