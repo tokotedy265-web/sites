@@ -2,20 +2,19 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Paiement Visa</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
   <script src="scripts.js" defer></script>
 </head>
 <body class="platform-visa">
-  <!-- Fond + overlay -->
   <div class="bg"></div>
   <div class="overlay"></div>
 
   <div class="container">
     <div class="card">
       <h1>Carte Visa <span class="badge">International</span></h1>
-      <p class="sub">Utilise ta carte Visa pour payer ton abonnement. Les données carte ne sont JAMAIS stockées sur ce site.</p>
+      <p class="sub">Tu seras redirigé(e) vers une page de paiement sécurisée.</p>
 
       <form class="form" id="visa-form">
         <div class="row">
@@ -29,9 +28,6 @@
         <label class="price" id="price"></label>
         <button class="button" type="submit">Payer avec Visa</button>
         <div class="status" id="status"></div>
-        <div class="footer">
-          Tu seras redirigé(e) vers la page sécurisée de ton PSP. Le webhook Visa finalisera l’abonnement.
-        </div>
       </form>
     </div>
   </div>
@@ -48,27 +44,31 @@
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const payload = buildPaymentPayload({
+
+      const tg_id = document.getElementById("tgid").value;
+
+      const payload = await buildPaymentPayload({
         provider:"visa",
         plan: planEl.value,
-        tg_id: document.getElementById("tgid").value || null
+        tg_id
       });
 
       try{
-        setStatus(statusEl, "Création du paiement et génération de lien…");
+        setStatus(statusEl, "Création du paiement…");
         const r = await createPayment(payload);
-        if (r.provider_redirect){
-          setStatus(statusEl, "Redirection vers le PSP…");
-          window.location.href = r.provider_redirect;
+
+        if (r.redirect_url){
+          setStatus(statusEl, "Redirection vers la page de paiement…");
+          window.location.href = r.redirect_url;
         } else {
-          setStatus(statusEl, "Lien de paiement indisponible. Vérifie la config PSP.");
+          setStatus(statusEl, "Erreur: lien de paiement indisponible.");
         }
+
       }catch(err){
         setStatus(statusEl, "Erreur: " + err.message);
       }
     });
 
-    // Récupérer tg_id depuis l’URL si présent
     const urlParams = new URLSearchParams(window.location.search);
     const tg_id = urlParams.get("tg_id");
     if (tg_id) document.getElementById("tgid").value = tg_id;
