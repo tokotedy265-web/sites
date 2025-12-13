@@ -1,13 +1,17 @@
-<!-- /sites/pay/visa/index.html -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Paiement Visa</title>
   <link rel="stylesheet" href="style.css">
-  <script src="scripts.js"></script>
+  <script src="scripts.js" defer></script>
 </head>
-<body>
+<body class="platform-visa">
+  <!-- Fond + overlay -->
+  <div class="bg"></div>
+  <div class="overlay"></div>
+
   <div class="container">
     <div class="card">
       <h1>Carte Visa <span class="badge">International</span></h1>
@@ -21,15 +25,17 @@
           </select>
           <input class="input" id="tgid" placeholder="Votre Telegram ID (tg_id)" />
         </div>
+
         <label class="price" id="price"></label>
         <button class="button" type="submit">Payer avec Visa</button>
         <div class="status" id="status"></div>
-        <div class="footer">Tu seras redirigé(e) vers la page sécurisée de ton PSP. Webhook Visa finalisera l’abonnement.</div>
+        <div class="footer">
+          Tu seras redirigé(e) vers la page sécurisée de ton PSP. Le webhook Visa finalisera l’abonnement.
+        </div>
       </form>
     </div>
   </div>
 
-  <script src="../../scripts.js"></script>
   <script>
     const planEl = document.getElementById("plan");
     const priceEl = document.getElementById("price");
@@ -50,8 +56,7 @@
 
       try{
         setStatus(statusEl, "Création du paiement et génération de lien…");
-        const r = await createPayment(payload); 
-        // Le backend renverra provider_redirect (URL du PSP) si nécessaire
+        const r = await createPayment(payload);
         if (r.provider_redirect){
           setStatus(statusEl, "Redirection vers le PSP…");
           window.location.href = r.provider_redirect;
@@ -62,12 +67,11 @@
         setStatus(statusEl, "Erreur: " + err.message);
       }
     });
+
+    // Récupérer tg_id depuis l’URL si présent
+    const urlParams = new URLSearchParams(window.location.search);
+    const tg_id = urlParams.get("tg_id");
+    if (tg_id) document.getElementById("tgid").value = tg_id;
   </script>
-    <input type="hidden" id="tgid" value="">
-<script>
-  const urlParams = new URLSearchParams(window.location.search);
-  const tg_id = urlParams.get("tg_id");
-  document.getElementById("tgid").value = tg_id;
-</script>
 </body>
 </html>

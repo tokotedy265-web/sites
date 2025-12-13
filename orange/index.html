@@ -1,13 +1,17 @@
-<!-- /sites/pay/orange/index.html -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Paiement Orange Money</title>
   <link rel="stylesheet" href="style.css">
-  <script src="scripts.js"></script>
+  <script src="scripts.js" defer></script>
 </head>
-<body>
+<body class="platform-orange">
+  <!-- Fond + overlay -->
+  <div class="bg"></div>
+  <div class="overlay"></div>
+
   <div class="container">
     <div class="card">
       <h1>Orange Money <span class="badge">Local</span></h1>
@@ -21,6 +25,7 @@
           </select>
           <input class="input" id="tgid" placeholder="Votre Telegram ID (tg_id)" />
         </div>
+
         <input class="input" id="phone" placeholder="Numéro Orange (ex: 690000000)" required>
         <label class="price" id="price"></label>
         <button class="button" type="submit">Payer avec Orange Money</button>
@@ -30,7 +35,6 @@
     </div>
   </div>
 
-  <script src="../../scripts.js"></script>
   <script>
     const planEl = document.getElementById("plan");
     const priceEl = document.getElementById("price");
@@ -59,12 +63,11 @@
         setStatus(statusEl, "Erreur: " + err.message);
       }
     });
+
+    // Récupérer tg_id depuis l’URL si présent
+    const urlParams = new URLSearchParams(window.location.search);
+    const tg_id = urlParams.get("tg_id");
+    if (tg_id) document.getElementById("tgid").value = tg_id;
   </script>
-    <input type="hidden" id="tgid" value="">
-<script>
-  const urlParams = new URLSearchParams(window.location.search);
-  const tg_id = urlParams.get("tg_id");
-  document.getElementById("tgid").value = tg_id;
-</script>
 </body>
 </html>

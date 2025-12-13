@@ -4,10 +4,14 @@
 <head>
   <meta charset="UTF-8">
   <title>Paiement MTN MoMo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
-  <script src="scripts.js"></script>
+  <script src="scripts.js" defer></script>
 </head>
-<body>
+<body class="platform-mtn">
+  <div class="bg"></div>
+  <div class="overlay"></div>
+
   <div class="container">
     <div class="card">
       <h1>MTN Mobile Money <span class="badge">Local</span></h1>
@@ -21,6 +25,7 @@
           </select>
           <input class="input" id="tgid" placeholder="Votre Telegram ID (tg_id)" />
         </div>
+
         <input class="input" id="phone" placeholder="Numéro MTN (ex: 670000000)" required>
         <label class="price" id="price"></label>
         <button class="button" type="submit">Payer avec MTN MoMo</button>
@@ -30,7 +35,6 @@
     </div>
   </div>
 
-  <script src="../../scripts.js"></script>
   <script>
     const planEl = document.getElementById("plan");
     const priceEl = document.getElementById("price");
@@ -52,19 +56,18 @@
 
       try{
         setStatus(statusEl, "Création et initiation du paiement…");
-        const r = await createPayment(payload); // backend retournera external_id et initiera requesttopay
+        const r = await createPayment(payload);
         sessionStorage.setItem("external_id", r.external_id);
         setStatus(statusEl, "Demande envoyée ✅. Valide sur ton téléphone.");
       }catch(err){
         setStatus(statusEl, "Erreur: " + err.message);
       }
     });
-  </script>
-    <input type="hidden" id="tgid" value="">
-  <script>
+
+    // Read tg_id from URL if present
     const urlParams = new URLSearchParams(window.location.search);
     const tg_id = urlParams.get("tg_id");
-    document.getElementById("tgid").value = tg_id;
+    if (tg_id) document.getElementById("tgid").value = tg_id;
   </script>
 </body>
 </html>

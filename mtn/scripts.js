@@ -1,5 +1,5 @@
 // /sites/scripts.js
-const API_BASE = "https://ton-backend.com"; // Remplace par l’URL publique de ton backend
+const API_BASE = "https://backend-bot-payement-4.onrender.com"; // Remplace par l’URL publique de ton backend
 const WEEK_PRICE = 500;
 const MONTH_PRICE = 2000;
 
