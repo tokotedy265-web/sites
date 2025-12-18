@@ -2,19 +2,29 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Paiement Visa</title>
+  <title>Paiement VISA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
   <script src="scripts.js" defer></script>
+
+  <!-- Telegram Login Widget -->
+  <script async src="https://telegram.org/js/telegram-widget.js?22"
+        data-telegram-login="LeslyAC_bot"
+        data-size="large"
+        data-userpic="false"
+        data-request-access="write"
+        data-auth-url="/auth">
+  </script>
 </head>
+
 <body class="platform-visa">
   <div class="bg"></div>
   <div class="overlay"></div>
 
   <div class="container">
     <div class="card">
-      <h1>Carte Visa <span class="badge">International</span></h1>
-      <p class="sub">Tu seras redirigé(e) vers une page de paiement sécurisée.</p>
+      <h1>VISA <span class="badge">International</span></h1>
+      <p class="sub">Choisis ton plan et procède au paiement sécurisé VISA.</p>
 
       <form class="form" id="visa-form">
         <div class="row">
@@ -22,17 +32,28 @@
             <option value="week">Semaine (7 jours)</option>
             <option value="month">Mois (30 jours)</option>
           </select>
-          <input class="input" id="tgid" placeholder="Votre Telegram ID (tg_id)" />
+
+          <!-- AUTO-FILL Telegram ID -->
+          <input class="input" id="tgid" placeholder="Votre Telegram ID" readonly />
         </div>
 
         <label class="price" id="price"></label>
-        <button class="button" type="submit">Payer avec Visa</button>
+
+        <button class="button" type="submit">Payer avec VISA</button>
         <div class="status" id="status"></div>
       </form>
     </div>
   </div>
 
   <script>
+    /* --- Auto-fill Telegram ID from Telegram Login Widget --- */
+    window.addEventListener("message", function(event) {
+      if (event.data && event.data.tg_id) {
+        document.getElementById("tgid").value = event.data.tg_id;
+      }
+    });
+
+    /* --- Price update --- */
     const planEl = document.getElementById("plan");
     const priceEl = document.getElementById("price");
     const form = document.getElementById("visa-form");
@@ -42,6 +63,7 @@
     updatePrice();
     planEl.addEventListener("change", updatePrice);
 
+    /* --- Submit payment --- */
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -54,24 +76,20 @@
       });
 
       try{
-        setStatus(statusEl, "Création du paiement…");
+        setStatus(statusEl, "Création du paiement VISA…");
         const r = await createPayment(payload);
 
-        if (r.redirect_url){
-          setStatus(statusEl, "Redirection vers la page de paiement…");
-          window.location.href = r.redirect_url;
+        // Redirection vers la page de paiement VISA
+        if (r.payment_url) {
+          window.location.href = r.payment_url;
         } else {
-          setStatus(statusEl, "Erreur: lien de paiement indisponible.");
+          setStatus(statusEl, "Lien VISA introuvable.");
         }
 
       }catch(err){
         setStatus(statusEl, "Erreur: " + err.message);
       }
     });
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const tg_id = urlParams.get("tg_id");
-    if (tg_id) document.getElementById("tgid").value = tg_id;
   </script>
 </body>
 </html>

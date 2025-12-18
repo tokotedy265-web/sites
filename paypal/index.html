@@ -6,7 +6,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
   <script src="scripts.js" defer></script>
+
+  <!-- Telegram Login Widget -->
+  <script async src="https://telegram.org/js/telegram-widget.js?22"
+        data-telegram-login="LeslyAC_bot"
+        data-size="large"
+        data-userpic="false"
+        data-request-access="write"
+        data-auth-url="/auth">
+  </script>
 </head>
+
 <body class="platform-paypal">
   <div class="bg"></div>
   <div class="overlay"></div>
@@ -14,7 +24,7 @@
   <div class="container">
     <div class="card">
       <h1>PayPal <span class="badge">International</span></h1>
-      <p class="sub">Tu seras redirigé(e) vers PayPal pour finaliser le paiement.</p>
+      <p class="sub">Choisis ton plan et procède au paiement PayPal.</p>
 
       <form class="form" id="paypal-form">
         <div class="row">
@@ -22,10 +32,13 @@
             <option value="week">Semaine (7 jours)</option>
             <option value="month">Mois (30 jours)</option>
           </select>
-          <input class="input" id="tgid" placeholder="Votre Telegram ID (tg_id)" />
+
+          <!-- AUTO-FILL Telegram ID -->
+          <input class="input" id="tgid" placeholder="Votre Telegram ID" readonly />
         </div>
 
         <label class="price" id="price"></label>
+
         <button class="button" type="submit">Payer avec PayPal</button>
         <div class="status" id="status"></div>
       </form>
@@ -33,6 +46,14 @@
   </div>
 
   <script>
+    /* --- Auto-fill Telegram ID from Telegram Login Widget --- */
+    window.addEventListener("message", function(event) {
+      if (event.data && event.data.tg_id) {
+        document.getElementById("tgid").value = event.data.tg_id;
+      }
+    });
+
+    /* --- Price update --- */
     const planEl = document.getElementById("plan");
     const priceEl = document.getElementById("price");
     const form = document.getElementById("paypal-form");
@@ -42,6 +63,7 @@
     updatePrice();
     planEl.addEventListener("change", updatePrice);
 
+    /* --- Submit payment --- */
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -54,24 +76,20 @@
       });
 
       try{
-        setStatus(statusEl, "Création du paiement…");
+        setStatus(statusEl, "Création du paiement PayPal…");
         const r = await createPayment(payload);
 
-        if (r.redirect_url){
-          setStatus(statusEl, "Redirection vers PayPal…");
-          window.location.href = r.redirect_url;
+        // Redirection PayPal
+        if (r.paypal_url) {
+          window.location.href = r.paypal_url;
         } else {
-          setStatus(statusEl, "Erreur: lien PayPal indisponible.");
+          setStatus(statusEl, "Lien PayPal introuvable.");
         }
 
       }catch(err){
         setStatus(statusEl, "Erreur: " + err.message);
       }
     });
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const tg_id = urlParams.get("tg_id");
-    if (tg_id) document.getElementById("tgid").value = tg_id;
   </script>
 </body>
 </html>
